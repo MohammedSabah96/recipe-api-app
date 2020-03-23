@@ -1,5 +1,5 @@
 # For more information, please refer to https://aka.ms/vscode-docker-python
-FROM python:3.8
+FROM python:3.8-alpine3.11
 EXPOSE 8000
 # Keeps Python from generating .pyc files in the container
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -7,12 +7,15 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 # Install pip requirements
 ADD requirements.txt .
+RUN apk add --update --no-cache postgresql-client
+RUN apk add --update --no-cache --virtual .tmp-build-deps \
+    gcc libc-dev linux-headers postgresql-dev
 RUN python -m pip install -r requirements.txt
+RUN apk del .tmp-build-deps
 WORKDIR /app
 ADD ./app /app
 # For more secure we add these two lines below
-RUN groupadd -g 1000 user && \
-    useradd -r -u 1000 -g user user
+RUN adduser -D user
 USER user
 # During debugging, this entry point will be overridden. For more information, refer to https://aka.ms/vscode-docker-python-debug
 # File wsgi.py was not found in subfolder:recipe-api-app. Please enter the Python path to wsgi file.
